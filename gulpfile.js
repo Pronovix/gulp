@@ -85,8 +85,6 @@
     done();
   }
 
-  var compileAll = gulp.series(compileAllThemes);
-
   function watch() {
     var themeScssPaths = [];
     for (var index = 0; index < themePaths.length; index++) {
@@ -95,8 +93,9 @@
     gulp.watch(themeScssPaths, compileAll);
   }
 
-  var compileAndWatch = gulp.series(compileAllThemes, watch);
+  var compileAll = gulp.series(compileAllThemes);
+  var compileAllAndWatch = gulp.series(compileAllThemes, watch);
 
   exports.default = compileAll;
-  exports.watch = compileAndWatch;
+  exports.watch = compileAllAndWatch;
 })();
