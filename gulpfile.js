@@ -1,104 +1,102 @@
-(function () {
+/**
+ * USAGE
+ *
+ * For the first time run `npm install`. This installs the node modules needed
+ * from the 'package.json' file.
+ *
+ * Once you have installed the node modules, you can use the following commands:
+ *  `npm run gulp`
+ *    this will fire the default task, creating a minified css.
+ *
+ *  `npm run gulp watch`
+ *    this will watch for changes in the sass files, and crates a minified css.
+ */
+
+(function() {
   "use strict";
 
+  var fs = require("fs");
+
+  // Load environment variables
+  var localEnv = {};
+
+  if (fs.existsSync('./env.js')) {
+    localEnv = require('./env.js');
+  }
+  else {
+    console.error('================\nNo env file detected.\n================');
+    return process.exit();
+  }
+
+  if(localEnv.localThemePaths.length === 0) {
+    console.error('================\nNo theme paths detected.\n================');
+    return process.exit();
+  }
+
+  // Packages.
   var gulp = require("gulp");
-
-  var args = require("yargs").argv;
-  var clean = require("gulp-clean");
-  var uglify = require("gulp-uglify");
-  var concat = require("gulp-concat");
+  var sass = require("gulp-sass");
   var gulpif = require("gulp-if");
-  var compass = require("gulp-compass");
-  var plumber = require("gulp-plumber");
-  var eslint = require("gulp-eslint");
-  var csso = require("gulp-csso");
-  var cmq = require("gulp-combine-media-queries");
-  var minifycss = require('gulp-minify-css');
+  var args = require("yargs").argv;
+  var postcss = require("gulp-postcss");
+  var sourcemaps = require("gulp-sourcemaps");
+  var strip = require("gulp-strip-comments");
+  var autoprefixer = require("autoprefixer");
+  var path = require("path");
 
-  var paths = {
-    vendor_scripts: [
-      "src/javascript/jquery.js",
-      "src/javascript/noconflict.js",
-      "src/javascript/jquery.cookie.js",
-      "src/javascript/URI.js",
-      "src/javascript/modernizr.mq.js",
-      "src/javascript/md5.js"
-    ],
-    non_vendor_scripts: [
-      // Polyfill.js adds hacks for IE, it does not conform eslint for now:
-      // "src/javascript/polyfill.js",
-      "src/javascript/walkthrough.js",
-      "src/javascript/walkthrough/*.js",
-      "src/javascript/walkthrough_start.js"
-    ],
-    sass: ["src/sass/walkthrough.sass"]
+  // Theme paths.
+  var themePaths = localEnv.localThemePaths;
+  var scss = 'scss/**/*.scss';
+
+  // Arguments for compiling.
+  var sassOptions = {
+    outputStyle: args.debug ? "expanded" : "compressed"
   };
 
-  paths.scripts = paths.vendor_scripts.concat(paths.non_vendor_scripts);
+  function handleError(err) {
+    console.error(
+      "----------------------------------------\n" +
+        "%s\n----------------------------------------",
+      err
+    );
+    if (args.jenkins) {
+      // If the task is run by jenkins, and something went wrong
+      // we should exit.
+      process.exit(1);
+    }
+    this.emit("end");
+  }
 
-  gulp.task("eslint", function () {
-    return gulp.src(paths.non_vendor_scripts)
-      .pipe(eslint({
-        rules: {
-          "eqeqeq": [2, "smart"],
-          "guard-for-in": 2,
-          "no-undef": 2,
-          "no-unused-vars": 0,
-          "strict": 2,
-          "new-cap": 0,
-          "quotes": 0,
-          "camelcase": 0,
-          "no-underscore-dangle": 0,
-          "no-new": 0,
-          "no-alert": 0,
-          "no-use-before-define": 0,
-          "consistent-return": 0,
-          "no-constant-condition": 0
-        },
-        globals: {
-          'console': true,
-          'jqWalkhub': true
-        },
-      }))
-      .pipe(eslint.format())
-      .pipe(eslint.failOnError());
-  });
+  function compile(themePath) {
+    return gulp
+      .src(path.join(themePath, scss))
+      .pipe(gulpif(args.debug, gulpif(!args.nosourcemap, sourcemaps.init())))
+      .pipe(sass(sassOptions).on("error", handleError))
+      .pipe(gulpif(args.debug, gulpif(!args.nosourcemap, sourcemaps.write())))
+      .pipe(postcss([autoprefixer({ browsers: ["last 1 version"] })]))
+      .pipe(gulpif(!args.debug, strip.text()))
+      .pipe(gulp.dest(path.join(themePath, 'css')));
+  }
 
-  gulp.task("buildjs", function () {
-    return gulp.src(paths.scripts)
-      .pipe(plumber())
-      .pipe(concat("compiled.js"))
-      .pipe(gulpif(!args.debug, uglify()))
-      .pipe(gulp.dest("."));
-  });
+  function compileAllThemes(done) {
+    themePaths.map(function(themePath) {
+      return compile(themePath);
+    });
+    done();
+  }
 
-  gulp.task("buildsass", function () {
-    var sassConfig = {
-      css: ".",
-      sass: "./src/sass",
-      project: __dirname
-    };
+  var compileAll = gulp.series(compileAllThemes);
 
-    return gulp.src(paths.sass)
-      .pipe(compass(sassConfig))
-      .pipe(csso())
-      .pipe(cmq({log: true}))
-      .pipe(gulpif(!args.debug, minifycss()))
-      .pipe(gulp.dest("./"));
-  });
+  function watch() {
+    var themeScssPaths = [];
+    for (var index = 0; index < themePaths.length; index++) {
+      themeScssPaths[index] = path.join(themePaths[index], scss);
+    }
+    gulp.watch(themeScssPaths, compileAll);
+  }
 
-  gulp.task("build", ["buildjs", "buildsass"]);
+  var compileAndWatch = gulp.series(compileAllThemes, watch);
 
-  gulp.task("clean", function () {
-    return gulp.src(["compiled.js", "walkthrough.css"])
-      .pipe(clean());
-  });
-
-  gulp.task("watch", function () {
-    gulp.watch("./src", ["clean", "build"]);
-    gulp.watch(paths.non_vendor_scripts, ["eslint"]);
-    gulp.watch(paths.non_vendor_scripts, ["buildjs"]);
-  });
-
-  gulp.task("default", ["clean", "build", "watch"]);
+  exports.default = compileAll;
+  exports.watch = compileAndWatch;
 })();
