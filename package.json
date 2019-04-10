@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "scripts": {
-    "gulp": "gulp --debug=$npm_package_config_debug"
+    "gulp": "gulp"
   },
   "dependencies": {
     "autoprefixer": "^9.5.0",

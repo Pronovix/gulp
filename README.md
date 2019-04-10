@@ -6,3 +6,6 @@
 1. Run `npm install` in this folder
 1. Run `npm run gulp` or `npm run gulp watch`
 1. Enjoy
+
+## Debugging
+1. If you want to have sourcemaps as well, run `npm run gulp -- --debug` or `npm run gulp watch --debug`
