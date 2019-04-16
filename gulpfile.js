@@ -73,7 +73,7 @@
       .pipe(gulpif(args.debug, gulpif(!args.nosourcemap, sourcemaps.init())))
       .pipe(sass(sassOptions).on("error", handleError))
       .pipe(gulpif(args.debug, gulpif(!args.nosourcemap, sourcemaps.write())))
-      .pipe(postcss([autoprefixer({ browsers: ["last 1 version"] })]))
+      .pipe(postcss([autoprefixer({ grid: "true", browsers: ["last 2 version"] })]))
       .pipe(gulpif(!args.debug, strip.text()))
       .pipe(gulp.dest(path.join(themePath, 'css')));
   }
