@@ -13,5 +13,8 @@
     "gulp-strip-comments": "^2.5.2",
     "path": "0.12.7",
     "yargs": "^13.2.2"
+  },
+  "devDependencies": {
+    "postcss-custom-properties": "^8.0.10"
   }
 }
