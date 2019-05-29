@@ -43,15 +43,11 @@
   var strip = require("gulp-strip-comments");
   var autoprefixer = require("autoprefixer");
   var path = require("path");
+  var export_sass = require('node-sass-export');
 
   // Theme paths.
   var themePaths = localEnv.localThemePaths;
   var scss = 'scss/**/*.scss';
-
-  // Arguments for compiling.
-  var sassOptions = {
-    outputStyle: args.debug ? "expanded" : "compressed"
-  };
 
   function handleError(err) {
     console.error(
@@ -71,7 +67,10 @@
     return gulp
       .src(path.join(themePath, scss))
       .pipe(gulpif(args.debug, gulpif(!args.nosourcemap, sourcemaps.init())))
-      .pipe(sass(sassOptions).on("error", handleError))
+      .pipe(sass({
+        outputStyle: args.debug ? "expanded" : "compressed",
+        functions: export_sass(themePath)
+      }).on("error", handleError))
       .pipe(gulpif(args.debug, gulpif(!args.nosourcemap, sourcemaps.write())))
       .pipe(postcss([autoprefixer({ grid: "true", browsers: ["last 2 version"] })]))
       .pipe(gulpif(!args.debug, strip.text()))
