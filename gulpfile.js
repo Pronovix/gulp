@@ -39,6 +39,7 @@
   var gulpif = require("gulp-if");
   var args = require("yargs").argv;
   var postcss = require("gulp-postcss");
+  var postcssCustomProperties = require('postcss-custom-properties');
   var sourcemaps = require("gulp-sourcemaps");
   var strip = require("gulp-strip-comments");
   var autoprefixer = require("autoprefixer");
@@ -72,6 +73,7 @@
         functions: export_sass(themePath)
       }).on("error", handleError))
       .pipe(gulpif(args.debug, gulpif(!args.nosourcemap, sourcemaps.write())))
+      .pipe(postcss([postcssCustomProperties()]))
       .pipe(postcss([autoprefixer({ grid: "true", browsers: ["last 2 version"] })]))
       .pipe(gulpif(!args.debug, strip.text()))
       .pipe(gulp.dest(path.join(themePath, 'css')));
