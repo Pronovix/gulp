@@ -1,6 +1,10 @@
-// Make available environment specific variables.
+/**
+ * @file
+ * Make available environment specific variables.
+ */
+
 module.exports = {
   localThemePaths: [
-    // '../web/path/to/my/theme',
-  ],
+    //'app/web/path/to/my/theme',
+  ]
 };

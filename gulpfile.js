@@ -1,5 +1,8 @@
 /**
- * USAGE
+ * @file
+ * Gulpfile that builds the theme.
+ *
+ * Usage:
  *
  * For the first time run `npm install`. This installs the node modules needed
  * from the 'package.json' file.
@@ -12,25 +15,25 @@
  *    this will watch for changes in the sass files, and crates a minified css.
  */
 
-(function() {
+(function () {
   "use strict";
 
   var fs = require("fs");
 
-  // Load environment variables
+  /* Load environment variables */
   var localEnv = {};
 
-  if (fs.existsSync('./env.js')) {
-    localEnv = require('./env.js');
+  if (fs.existsSync('./app/env.js')) {
+    localEnv = require('./app/env.js');
   }
   else {
     console.error('================\nNo env file detected.\n================');
-    return process.exit();
+    return process.exit(1);
   }
 
-  if(localEnv.localThemePaths.length === 0) {
+  if (localEnv.localThemePaths.length === 0) {
     console.error('================\nNo theme paths detected.\n================');
-    return process.exit();
+    return process.exit(1);
   }
 
   // Packages.
@@ -53,11 +56,11 @@
   function handleError(err) {
     console.error(
       "----------------------------------------\n" +
-        "%s\n----------------------------------------",
+      "%s\n----------------------------------------",
       err
     );
-    if (args.jenkins) {
-      // If the task is run by jenkins, and something went wrong
+    if (args.ci) {
+      // If the task is run by CI, and something went wrong
       // we should exit.
       process.exit(1);
     }
@@ -80,7 +83,7 @@
   }
 
   function compileAllThemes(done) {
-    themePaths.map(function(themePath) {
+    themePaths.map(function (themePath) {
       return compile(themePath);
     });
     done();
