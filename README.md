@@ -8,4 +8,4 @@
 
 ## Debugging
 
-- If you want to have sourcemaps as well, run `npm run gulp -- --debug` or `npm run gulp watch --debug`
+- If you want to have non-minified CSS with sourcemaps, run `npm run gulp -- --debug` or `npm run gulp watch -- --debug`.
