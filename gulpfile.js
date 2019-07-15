@@ -77,7 +77,7 @@
       }).on("error", handleError))
       .pipe(gulpif(args.debug, gulpif(!args.nosourcemap, sourcemaps.write())))
       .pipe(postcss([postcssCustomProperties()]))
-      .pipe(postcss([autoprefixer({ grid: "true", browsers: ["last 2 version"] })]))
+      .pipe(postcss([autoprefixer({ grid: "true"})]))
       .pipe(gulpif(!args.debug, strip.text()))
       .pipe(gulp.dest(path.join(themePath, 'css')));
   }
