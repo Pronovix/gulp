@@ -26,6 +26,9 @@
   if (fs.existsSync('./app/env.js')) {
     localEnv = require('./app/env.js');
   }
+  else if (fs.existsSync('./env.js')) {
+    localEnv = require('./env.js');
+  }
   else {
     console.error('================\nNo env file detected.\n================');
     return process.exit(1);
@@ -75,10 +78,10 @@
         outputStyle: args.debug ? "expanded" : "compressed",
         functions: export_sass(themePath)
       }).on("error", handleError))
-      .pipe(gulpif(args.debug, gulpif(!args.nosourcemap, sourcemaps.write())))
       .pipe(postcss([postcssCustomProperties()]))
       .pipe(postcss([autoprefixer({ grid: "true"})]))
       .pipe(gulpif(!args.debug, strip.text()))
+      .pipe(gulpif(args.debug, gulpif(!args.nosourcemap, sourcemaps.write()))) 
       .pipe(gulp.dest(path.join(themePath, 'css')));
   }
 
