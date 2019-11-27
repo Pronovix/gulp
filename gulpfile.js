@@ -19,29 +19,34 @@
   "use strict";
 
   const fs = require("fs");
+  let settings;
 
-  /* Load environment variables */
-  let localEnv;
-
-  if (fs.existsSync('./app/env.js')) {
-    localEnv = require('./app/env.js');
+  // Default structure.
+  if (fs.existsSync('./gulpsettings.js')) {
+    settings = require('./gulpsettings.js');
   }
-  else if (fs.existsSync('./env.js')) {
-    localEnv = require('./env.js');
+  // Monorepo structure.
+  else if (fs.existsSync('../../gulpsettings.js')) {
+    settings = require('../../gulpsettings.js');
+  }
+  // Project structure.
+  else if (fs.existsSync('../../build/gulpsettings.js')) {
+    settings = require('../../build/gulpsettings.js');
   }
   else {
-    console.error('================\nNo env file detected.\n================');
+    console.error('================\nNo gulpsettings.js file detected.\n================');
+    console.warn('================\nPlease refer to https://github.com/Pronovix/gulp to see how to create an gulpsettings.js file.\n================');
     return process.exit(1);
   }
 
   function getConfig(configName) {
     let config = [];
 
-    if (!(configName in localEnv) || localEnv[configName].length === 0) {
+    if (!(configName in settings) || settings[configName].length === 0) {
       log('===== No ' + configName + ' config detected. =====');
     }
     else {
-      config = localEnv[configName];
+      config = settings[configName];
     }
 
     return config;
@@ -67,6 +72,9 @@
   const babel = require("gulp-babel");
   const rename = require("gulp-rename");
 
+  // Default settings.
+  const defaultGlobs = ['!**/node_modules/**'];
+
   function handleError(err) {
     console.error(
       "----------------------------------------\n" +
@@ -87,6 +95,7 @@
   };
 
   function compileJs(globs, componentPath) {
+    globs = globs.concat(defaultGlobs);
     return gulp
       .src(globs, { cwd: componentPath })
       .pipe(
@@ -111,6 +120,7 @@
   }
 
   function compileScss(globs, componentPath) {
+    globs = globs.concat(defaultGlobs);
     return gulp
       .src(globs, { cwd: componentPath })
       .pipe(gulpif(args.debug, gulpif(!args.nosourcemap, sourcemaps.init())))
@@ -156,5 +166,5 @@
   exports.watchscss = watchScss;
   exports.js = compileAllJs;
   exports.watchjs = watchJs;
-  exports.watch = gulp.parallel(watchScss, watchJs);
+  exports.watch = gulp.parallel(compileAllScss, compileAllJs, watchScss, watchJs);
 })();

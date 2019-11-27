@@ -6,18 +6,18 @@
 module.exports = {
   scss: [
     {
-      path: "/mnt/files/local_mount/drupal/themes/[theme]",
+      path: "/mnt/files/local_mount/build/web/themes/custom/[theme]",
       globs: [
-        "scss/**/*.scss"
+        "scss/**/*.scss",
+        "!scss/01-vendor/**"
       ]
     }
   ],
   js: [
     {
-      path: "/mnt/files/local_mount/drupal/themes/[theme]",
+      path: "/mnt/files/local_mount/build/web/themes/custom/[theme]",
       globs: [
         "js/**/*.es6.js",
-        "!node_module/**"
       ]
     }
   ]
