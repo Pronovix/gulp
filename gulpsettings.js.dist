@@ -1,0 +1,24 @@
+/**
+ * @file
+ * Provide configuration for the task runner.
+ */
+
+module.exports = {
+  scss: [
+    {
+      path: "/mnt/files/local_mount/build/web/themes/custom/[theme]",
+      globs: [
+        "scss/**/*.scss",
+        "!scss/01-vendor/**"
+      ]
+    }
+  ],
+  js: [
+    {
+      path: "/mnt/files/local_mount/build/web/themes/custom/[theme]",
+      globs: [
+        "js/**/*.es6.js",
+      ]
+    }
+  ]
+};

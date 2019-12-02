@@ -7,16 +7,23 @@
     "last 2 version"
   ],
   "dependencies": {
-    "autoprefixer": "^9.6.1",
+    "autoprefixer": "^9.7.1",
+    "fancy-log": "^1.3.3",
     "gulp": "^4.0.2",
-    "gulp-if": "^2.0.2",
+    "gulp-if": "^3.0.0",
     "gulp-postcss": "^8.0.0",
+    "gulp-rename": "^1.4.0",
     "gulp-sass": "^4.0.2",
     "gulp-sourcemaps": "^2.6.5",
     "gulp-strip-comments": "^2.5.2",
     "node-sass-export": "0.0.3",
     "path": "0.12.7",
-    "yargs": "^13.2.4",
-    "postcss-custom-properties": "^9.0.1"
+    "postcss-custom-properties": "^9.0.2",
+    "yargs": "^14.2.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.7.2",
+    "@babel/preset-env": "^7.7.1",
+    "gulp-babel": "^8.0.0"
   }
 }

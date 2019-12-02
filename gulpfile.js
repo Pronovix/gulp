@@ -18,43 +18,62 @@
 (function () {
   "use strict";
 
-  var fs = require("fs");
+  const fs = require("fs");
+  let settings;
 
-  /* Load environment variables */
-  var localEnv = {};
-
-  if (fs.existsSync('./app/env.js')) {
-    localEnv = require('./app/env.js');
+  // Default structure.
+  if (fs.existsSync('./gulpsettings.js')) {
+    settings = require('./gulpsettings.js');
   }
-  else if (fs.existsSync('./env.js')) {
-    localEnv = require('./env.js');
+  // Monorepo structure.
+  else if (fs.existsSync('../../gulpsettings.js')) {
+    settings = require('../../gulpsettings.js');
+  }
+  // Project structure.
+  else if (fs.existsSync('../../build/gulpsettings.js')) {
+    settings = require('../../build/gulpsettings.js');
   }
   else {
-    console.error('================\nNo env file detected.\n================');
+    console.error('================\nNo gulpsettings.js file detected.\n================');
+    console.warn('================\nPlease refer to https://github.com/Pronovix/gulp to see how to create an gulpsettings.js file.\n================');
     return process.exit(1);
   }
 
-  if (localEnv.localThemePaths.length === 0) {
-    console.error('================\nNo theme paths detected.\n================');
-    return process.exit(1);
+  function getConfig(configName) {
+    let config = [];
+
+    if (!(configName in settings) || settings[configName].length === 0) {
+      log('===== No ' + configName + ' config detected. =====');
+    }
+    else {
+      config = settings[configName];
+    }
+
+    return config;
   }
 
-  // Packages.
-  var gulp = require("gulp");
-  var sass = require("gulp-sass");
-  var gulpif = require("gulp-if");
-  var args = require("yargs").argv;
-  var postcss = require("gulp-postcss");
-  var postcssCustomProperties = require('postcss-custom-properties');
-  var sourcemaps = require("gulp-sourcemaps");
-  var strip = require("gulp-strip-comments");
-  var autoprefixer = require("autoprefixer");
-  var path = require("path");
-  var export_sass = require('node-sass-export');
+  // Common packages.
+  const gulp = require("gulp");
+  const strip = require("gulp-strip-comments");
+  const log = require("fancy-log");
 
-  // Theme paths.
-  var themePaths = localEnv.localThemePaths;
-  var scss = 'scss/**/*.scss';
+  // SCSS Packages.
+  const sass = require("gulp-sass");
+  const gulpif = require("gulp-if");
+  const args = require("yargs").argv;
+  const postcss = require("gulp-postcss");
+  const postcssCustomProperties = require('postcss-custom-properties');
+  const sourcemaps = require("gulp-sourcemaps");
+  const autoprefixer = require("autoprefixer");
+  const path = require("path");
+  const export_sass = require('node-sass-export');
+
+  // JS Packages.
+  const babel = require("gulp-babel");
+  const rename = require("gulp-rename");
+
+  // Default settings.
+  const defaultGlobs = ['!**/node_modules/**'];
 
   function handleError(err) {
     console.error(
@@ -70,39 +89,82 @@
     this.emit("end");
   }
 
-  function compile(themePath) {
+  const cutES6 = title => {
+    log("File rename: " + title + " -> " + title.replace(".es6", ""));
+    return title.replace(".es6", "");
+  };
+
+  function compileJs(globs, componentPath) {
+    globs = globs.concat(defaultGlobs);
     return gulp
-      .src(path.join(themePath, scss))
-      .pipe(gulpif(args.debug, gulpif(!args.nosourcemap, sourcemaps.init())))
-      .pipe(sass({
-        outputStyle: args.debug ? "expanded" : "compressed",
-        functions: export_sass(themePath)
-      }).on("error", handleError))
-      .pipe(postcss([postcssCustomProperties()]))
-      .pipe(postcss([autoprefixer({ grid: "true"})]))
-      .pipe(gulpif(!args.debug, strip.text()))
-      .pipe(gulpif(args.debug, gulpif(!args.nosourcemap, sourcemaps.write()))) 
-      .pipe(gulp.dest(path.join(themePath, 'css')));
+      .src(globs, { cwd: componentPath })
+      .pipe(
+        babel({
+          presets: ["@babel/preset-env"]
+        }).on("error", handleError))
+      .pipe(strip())
+      .pipe(
+        rename(function (path) {
+          path.basename = cutES6(path.basename);
+        })
+      )
+      .pipe(gulp.dest(path.join(componentPath, 'js')));
   }
 
-  function compileAllThemes(done) {
-    themePaths.map(function (themePath) {
-      return compile(themePath);
+  function compileAllJs(done) {
+    let config = getConfig('js');
+    config.map(function (value) {
+      return compileJs(value.globs, value.path);
     });
     done();
   }
 
-  function watch() {
-    var themeScssPaths = [];
-    for (var index = 0; index < themePaths.length; index++) {
-      themeScssPaths[index] = path.join(themePaths[index], scss);
-    }
-    gulp.watch(themeScssPaths, compileAll);
+  function compileScss(globs, componentPath) {
+    globs = globs.concat(defaultGlobs);
+    return gulp
+      .src(globs, { cwd: componentPath })
+      .pipe(gulpif(args.debug, gulpif(!args.nosourcemap, sourcemaps.init())))
+      .pipe(sass({
+        outputStyle: args.debug ? "expanded" : "compressed",
+        functions: export_sass(componentPath)
+      }).on("error", handleError))
+      .pipe(postcss([postcssCustomProperties()]))
+      .pipe(postcss([autoprefixer({ grid: "true" })]))
+      .pipe(gulpif(!args.debug, strip.text()))
+      .pipe(gulpif(args.debug, gulpif(!args.nosourcemap, sourcemaps.write())))
+      .pipe(gulp.dest(path.join(componentPath, 'css')));
   }
 
-  var compileAll = gulp.series(compileAllThemes);
-  var compileAllAndWatch = gulp.series(compileAllThemes, watch);
+  function compileAllScss(done) {
+    let config = getConfig('scss');
+    config.map(function (value) {
+      return compileScss(value.globs, value.path);
+    });
+    done();
+  }
 
-  exports.default = compileAll;
-  exports.watch = compileAllAndWatch;
+  function watchScss() {
+    let config = getConfig('scss');
+    for (let i = 0; i < config.length; i++) {
+      let globs = config[i].globs;
+      let componentPath = config[i].path;
+      gulp.watch(globs, { cwd: componentPath }, compileAllScss);
+    }
+  }
+
+  function watchJs() {
+    let config = getConfig('js');
+    for (let i = 0; i < config.length; i++) {
+      let globs = config[i].globs;
+      let componentPath = config[i].path;
+      gulp.watch(globs, { cwd: componentPath }, compileAllJs);
+    }
+  }
+
+  exports.default = gulp.parallel(compileAllScss, compileAllJs);
+  exports.scss = compileAllScss;
+  exports.watchscss = watchScss;
+  exports.js = compileAllJs;
+  exports.watchjs = watchJs;
+  exports.watch = gulp.parallel(compileAllScss, compileAllJs, watchScss, watchJs);
 })();
