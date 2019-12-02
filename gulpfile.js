@@ -35,7 +35,7 @@
   }
   else {
     console.error('================\nNo gulpsettings.js file detected.\n================');
-    console.warn('================\nPlease refer to https://github.com/Pronovix/gulp to see how to create an gulpsettings.js file.\n================');
+    console.warn('================\nPlease refer to https://github.com/Pronovix/gulp to see how to create a gulpsettings.js file.\n================');
     return process.exit(1);
   }
 

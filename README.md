@@ -4,8 +4,8 @@
 
 ### Configuration
 
-1. Copy `gulpsettings.js.dist` as `gulpsettings.js` to the Drupal root folder.
-2. Configure the newly copied `gulpsettings.js`. Path can be either relative or absolute. See [Gulp src](https://gulpjs.com/docs/en/api/src)'s `cwd` option documentation for further info.
+1. Copy `gulpsettings.js.dist` as `gulpsettings.js` to the folder where `Jenkinsfile` resides.
+2. Configure the newly copied `gulpsettings.js`. Path can be either relative or absolute. See [Gulp src](https://gulpjs.com/docs/en/api/src)'s `cwd` option documentation for further information.
 
 ### gulpsettings.js example
 
