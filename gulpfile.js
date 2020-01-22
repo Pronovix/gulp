@@ -15,10 +15,10 @@
  *    this will watch for changes in the sass files, and crates a minified css.
  */
 
-(function () {
-  "use strict";
+(function() {
+  'use strict';
 
-  const fs = require("fs");
+  const fs = require('fs');
   let settings;
 
   // Default structure.
@@ -32,9 +32,10 @@
   // Project structure.
   else if (fs.existsSync('../../build/gulpsettings.js')) {
     settings = require('../../build/gulpsettings.js');
-  }
-  else {
-    console.error('================\nNo gulpsettings.js file detected.\nPlease refer to https://github.com/Pronovix/gulp to see how to create a gulpsettings.js file.\n================');
+  } else {
+    console.error(
+      '================\nNo gulpsettings.js file detected.\nPlease refer to https://github.com/Pronovix/gulp to see how to create a gulpsettings.js file.\n================',
+    );
     return process.exit(2);
   }
 
@@ -43,8 +44,7 @@
 
     if (!(configName in settings) || settings[configName].length === 0) {
       log('===== No ' + configName + ' config detected. =====');
-    }
-    else {
+    } else {
       config = settings[configName];
     }
 
@@ -52,45 +52,41 @@
   }
 
   // Common packages.
-  const gulp = require("gulp");
-  const strip = require("gulp-strip-comments");
-  const log = require("fancy-log");
+  const gulp = require('gulp');
+  const strip = require('gulp-strip-comments');
+  const log = require('fancy-log');
 
   // SCSS Packages.
-  const sass = require("gulp-sass");
-  const gulpif = require("gulp-if");
-  const args = require("yargs").argv;
-  const postcss = require("gulp-postcss");
+  const sass = require('gulp-sass');
+  const gulpif = require('gulp-if');
+  const args = require('yargs').argv;
+  const postcss = require('gulp-postcss');
   const postcssCustomProperties = require('postcss-custom-properties');
-  const sourcemaps = require("gulp-sourcemaps");
-  const autoprefixer = require("autoprefixer");
-  const path = require("path");
+  const sourcemaps = require('gulp-sourcemaps');
+  const autoprefixer = require('autoprefixer');
+  const path = require('path');
   const export_sass = require('node-sass-export');
 
   // JS Packages.
-  const babel = require("gulp-babel");
-  const rename = require("gulp-rename");
+  const babel = require('gulp-babel');
+  const rename = require('gulp-rename');
 
   // Default settings.
   const defaultGlobs = ['!**/node_modules/**'];
 
   function handleError(err) {
-    console.error(
-      "----------------------------------------\n" +
-      "%s\n----------------------------------------",
-      err
-    );
+    console.error('----------------------------------------\n' + '%s\n----------------------------------------', err);
     if (args.ci) {
       // If the task is run by CI, and something went wrong
       // we should exit.
       process.exit(1);
     }
-    this.emit("end");
+    this.emit('end');
   }
 
-  const cutES6 = title => {
-    log("File rename: " + title + " -> " + title.replace(".es6", ""));
-    return title.replace(".es6", "");
+  const cutES6 = (title) => {
+    log('File rename: ' + title + ' -> ' + title.replace('.es6', ''));
+    return title.replace('.es6', '');
   };
 
   function compileJs(globs, componentPath) {
@@ -99,20 +95,22 @@
       .src(globs, { cwd: componentPath })
       .pipe(
         babel({
-          presets: ["@babel/preset-env"]
-        }).on("error", handleError))
+          presets: ['@babel/preset-env'],
+          plugins: ['@babel/plugin-proposal-class-properties'],
+        }).on('error', handleError),
+      )
       .pipe(strip())
       .pipe(
-        rename(function (path) {
+        rename(function(path) {
           path.basename = cutES6(path.basename);
-        })
+        }),
       )
       .pipe(gulp.dest(path.join(componentPath, 'js')));
   }
 
   function compileAllJs(done) {
     let config = getConfig('js');
-    config.map(function (value) {
+    config.map(function(value) {
       return compileJs(value.globs, value.path);
     });
     done();
@@ -123,12 +121,14 @@
     return gulp
       .src(globs, { cwd: componentPath })
       .pipe(gulpif(args.debug, gulpif(!args.nosourcemap, sourcemaps.init())))
-      .pipe(sass({
-        outputStyle: args.debug ? "expanded" : "compressed",
-        functions: export_sass(componentPath)
-      }).on("error", handleError))
+      .pipe(
+        sass({
+          outputStyle: args.debug ? 'expanded' : 'compressed',
+          functions: export_sass(componentPath),
+        }).on('error', handleError),
+      )
       .pipe(postcss([postcssCustomProperties()]))
-      .pipe(postcss([autoprefixer({ grid: "true" })]))
+      .pipe(postcss([autoprefixer({ grid: 'true' })]))
       .pipe(gulpif(!args.debug, strip.text()))
       .pipe(gulpif(args.debug, gulpif(!args.nosourcemap, sourcemaps.write())))
       .pipe(gulp.dest(path.join(componentPath, 'css')));
@@ -136,7 +136,7 @@
 
   function compileAllScss(done) {
     let config = getConfig('scss');
-    config.map(function (value) {
+    config.map(function(value) {
       return compileScss(value.globs, value.path);
     });
     done();
