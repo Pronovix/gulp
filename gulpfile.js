@@ -15,7 +15,7 @@
  *    this will watch for changes in the sass files, and crates a minified css.
  */
 
-(function() {
+(function () {
   'use strict';
 
   const fs = require('fs');
@@ -97,11 +97,12 @@
         babel({
           presets: ['@babel/preset-env'],
           plugins: ['@babel/plugin-proposal-class-properties'],
+          sourceType: 'unambiguous'
         }).on('error', handleError),
       )
       .pipe(strip())
       .pipe(
-        rename(function(path) {
+        rename(function (path) {
           path.basename = cutES6(path.basename);
         }),
       )
@@ -110,7 +111,7 @@
 
   function compileAllJs(done) {
     let config = getConfig('js');
-    config.map(function(value) {
+    config.map(function (value) {
       return compileJs(value.globs, value.path);
     });
     done();
@@ -136,7 +137,7 @@
 
   function compileAllScss(done) {
     let config = getConfig('scss');
-    config.map(function(value) {
+    config.map(function (value) {
       return compileScss(value.globs, value.path);
     });
     done();
